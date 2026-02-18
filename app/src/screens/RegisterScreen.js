@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Alert } from "react-native";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { firebaseAuth } from "../firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { firebaseAuth, firebaseDb } from "../firebase";
 import AuthScreen from "./AuthScreen";
 
 export default function RegisterScreen({ navigation }) {
@@ -23,8 +24,21 @@ export default function RegisterScreen({ navigation }) {
         });
       }
       
+      // Create user document in Firestore
+      await setDoc(doc(firebaseDb, "users", userCredential.user.uid), {
+        uid: userCredential.user.uid,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      
       // Navigation will happen automatically via onAuthStateChanged in App.js
     } catch (err) {
+      console.error("Registration error:", err);
+      console.error("Error code:", err.code);
+      console.error("Error message:", err.message);
+      
       let message = "Registration failed. Please try again.";
       
       if (err.code === "auth/email-already-in-use") {
@@ -35,6 +49,11 @@ export default function RegisterScreen({ navigation }) {
         message = "Password is too weak. Please use a stronger password.";
       } else if (err.code === "auth/network-request-failed") {
         message = "Network error. Please check your connection.";
+      } else if (err.code === "permission-denied" || err.message?.includes("permission")) {
+        message = "Database permission error. Please check Firestore rules.";
+      } else {
+        // Include the actual error message for debugging
+        message = `Registration failed: ${err.message}`;
       }
       
       setError(message);
