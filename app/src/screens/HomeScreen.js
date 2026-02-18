@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, typography, spacing } from "../styles";
 
-export default function HomeScreen({ onSignOut }) {
+export default function HomeScreen({ onSignOut, user }) {
+  const displayName = user?.displayName || user?.email?.split('@')[0] || 'User';
+  
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Welcome Home</Text>
+        <Text style={styles.title}>Welcome, {displayName}!</Text>
         <Text style={styles.subtitle}>House overview coming soon.</Text>
         <TouchableOpacity style={styles.button} onPress={onSignOut}>
           <Text style={styles.buttonText}>Sign out</Text>
